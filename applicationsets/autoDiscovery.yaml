@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: dynamic-deployments
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          # 1. First, find the REPOS (SCM Generator)
+          - scmProvider:
+              github:
+                organization: sarany1947
+                tokenRef:
+                  secretName: github-token
+                  key: token
+              filters:
+                - branchMatch: "main"
+          # 2. Second, look for the CONFIG FILE inside those repos (Git File Generator)
+          - git:
+              repoURL: "{{url}}"
+              revision: "{{branch}}"
+              files:
+                - path: ".argocd-config.yaml"
+  template:
+    metadata:
+      # Use the 'appName' from the config file, or fallback to repo name
+      name: "{{appName}}"
+    spec:
+      project: default
+      source:
+        repoURL: "{{url}}"
+        targetRevision: "{{branch}}"
+        path: "{{appPath}}" # Read from config file
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{destNamespace}}" # Read from config file
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
