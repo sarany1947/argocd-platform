@@ -10,7 +10,7 @@ spec:
           # 1. First, find the REPOS (SCM Generator)
           - scmProvider:
               github:
-                organization: sarany1947
+                user: sarany1947
                 tokenRef:
                   secretName: github-token
                   key: token
