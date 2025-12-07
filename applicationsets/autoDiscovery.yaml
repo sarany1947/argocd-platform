@@ -7,16 +7,12 @@ spec:
   generators:
     - matrix:
         generators:
-          # 1. First, find the REPOS (SCM Generator)
-          - scmProvider:
-              github:
-                user: sarany1947
-                tokenRef:
-                  secretName: github-token
-                  key: token
-              filters:
-                - branchMatch: "main"
-          # 2. Second, look for the CONFIG FILE inside those repos (Git File Generator)
+          # 1. Manually List Repos (Since SCM Auto-Discovery failed)
+          - list:
+              elements:
+                - url: https://github.com/sarany1947/apps.git
+                  branch: main
+          # 2. Look for Config File (This part stays the same!)
           - git:
               repoURL: "{{url}}"
               revision: "{{branch}}"
@@ -24,17 +20,16 @@ spec:
                 - path: ".argocd-config.yaml"
   template:
     metadata:
-      # Use the 'appName' from the config file, or fallback to repo name
       name: "{{appName}}"
     spec:
       project: default
       source:
         repoURL: "{{url}}"
         targetRevision: "{{branch}}"
-        path: "{{appPath}}" # Read from config file
+        path: "{{appPath}}"
       destination:
         server: https://kubernetes.default.svc
-        namespace: "{{destNamespace}}" # Read from config file
+        namespace: "{{destNamespace}}"
       syncPolicy:
         automated:
           prune: true
